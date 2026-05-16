@@ -68,7 +68,7 @@ Your application will now be running on `http://localhost:3000/` (or whichever p
 - `src/components/` - Reusable UI components (Sidebar, Navbar, ChatBox, etc.)
 - `src/context/` - Global state management (AuthContext, SocketContext)
 - `src/pages/` - Main view layouts (Login, Register, Chat)
-- `src/services/` - External connections (Axios instances, Socket initialization)
+- `src/services/` - External connections (Axios instances, Socket initialization)git git commit
 - `src/utils/` - Helper functions (Date formatting)
 
 ---
