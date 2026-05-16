@@ -4,27 +4,26 @@ import { useSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
 import Loader from './Loader';
 
-const Sidebar = ({ selectedUser, setSelectedUser }) => {
-  const [users, setUsers] = useState([]);
+const Sidebar = ({ selectedRoom, setSelectedRoom }) => {
+  const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const { onlineUsers } = useSocket();
   const { user: currentUser } = useAuth();
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchRooms = async () => {
       try {
-        const response = await api.get('/users'); // Assuming you have a route to get users
-        // Filter out the current user
-        setUsers(response.data.data.filter(u => u._id !== currentUser._id));
+        const response = await api.get('/rooms');
+        setRooms(response.data.data.rooms || []);
       } catch (error) {
-        console.error('Error fetching users:', error);
+        console.error('Error fetching rooms:', error);
       } finally {
         setLoading(false);
       }
     };
 
     if (currentUser) {
-      fetchUsers();
+      fetchRooms();
     }
   }, [currentUser]);
 
@@ -47,21 +46,32 @@ const Sidebar = ({ selectedUser, setSelectedUser }) => {
       
       <div className="p-4 pt-5 pb-2 flex justify-between items-center">
         <h2 className="text-gray-800 dark:text-gray-200 font-bold text-lg">All Chats</h2>
-        <span className="bg-primary-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{users.length}</span>
+        <span className="bg-primary-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{rooms.length}</span>
       </div>
       
       <div className="flex-1 overflow-y-auto custom-scrollbar px-2">
-        {users.length === 0 ? (
+        {rooms.length === 0 ? (
           <div className="p-4 text-gray-500 text-center text-sm mt-10">No conversations yet</div>
         ) : (
-          users.map((user) => {
-            const isOnline = onlineUsers.includes(user._id);
-            const isSelected = selectedUser?._id === user._id;
+          rooms.map((room) => {
+            // Determine display user for direct messages
+            let displayUser = null;
+            if (room.type === 'direct') {
+              displayUser = room.participants.find(p => p._id !== currentUser._id);
+            }
+            
+            // Fallback to room name if group, or if somehow participant not found
+            const displayName = displayUser ? displayUser.username : room.name;
+            const displayAvatar = displayUser?.avatar; // Can be added later
+            
+            const isOnline = displayUser ? onlineUsers.includes(displayUser._id) : false;
+            const isSelected = selectedRoom?._id === room._id;
+            const lastMessage = room.lastMessage;
             
             return (
               <div 
-                key={user._id}
-                onClick={() => setSelectedUser(user)}
+                key={room._id}
+                onClick={() => setSelectedRoom(room)}
                 className={`p-3 mx-2 mb-1 flex items-center gap-3 cursor-pointer transition-all rounded-xl ${
                   isSelected 
                     ? 'bg-nexus-gradient text-white shadow-lg shadow-primary-500/20' 
@@ -72,7 +82,11 @@ const Sidebar = ({ selectedUser, setSelectedUser }) => {
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shadow-sm ${
                     isSelected ? 'bg-white/20 text-white' : 'bg-primary-100 dark:bg-dark-700 text-primary-600 dark:text-primary-400'
                   }`}>
-                    {user.username.charAt(0).toUpperCase()}
+                    {displayAvatar ? (
+                      <img src={displayAvatar} alt={displayName} className="w-full h-full rounded-full object-cover" />
+                    ) : (
+                      displayName ? displayName.charAt(0).toUpperCase() : '?'
+                    )}
                   </div>
                   {isOnline && (
                     <span className={`absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 rounded-full ${
@@ -83,11 +97,15 @@ const Sidebar = ({ selectedUser, setSelectedUser }) => {
                 
                 <div className="flex flex-col overflow-hidden w-full">
                   <div className="flex justify-between items-center">
-                    <span className="font-semibold truncate">{user.username}</span>
-                    <span className={`text-[10px] ${isSelected ? 'text-white/80' : 'text-gray-400'}`}>10:30 AM</span>
+                    <span className="font-semibold truncate">{displayName}</span>
+                    {lastMessage && (
+                      <span className={`text-[10px] ${isSelected ? 'text-white/80' : 'text-gray-400'}`}>
+                        {new Date(lastMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    )}
                   </div>
                   <span className={`text-xs truncate ${isSelected ? 'text-white/90' : 'text-gray-500 dark:text-gray-400'}`}>
-                    Click to view conversation...
+                    {lastMessage ? lastMessage.message : 'Click to view conversation...'}
                   </span>
                 </div>
               </div>

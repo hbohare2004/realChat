@@ -4,7 +4,7 @@ import Sidebar from '../components/Sidebar';
 import ChatBox from '../components/ChatBox';
 
 const Chat = () => {
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedRoom, setSelectedRoom] = useState(null);
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-light-900 dark:bg-dark-900 transition-colors relative">
@@ -16,13 +16,13 @@ const Chat = () => {
       <LeftNav />
 
       {/* 2. Chat List Sidebar */}
-      <div className={`${selectedUser ? 'hidden md:flex' : 'flex'} w-full md:w-[320px] shrink-0 z-10 glass-panel md:m-4 md:mr-0 rounded-none md:rounded-2xl overflow-hidden`}>
-        <Sidebar selectedUser={selectedUser} setSelectedUser={setSelectedUser} />
+      <div className={`${selectedRoom ? 'hidden md:flex' : 'flex'} w-full md:w-[320px] shrink-0 z-10 glass-panel md:m-4 md:mr-0 rounded-none md:rounded-2xl overflow-hidden`}>
+        <Sidebar selectedRoom={selectedRoom} setSelectedRoom={setSelectedRoom} />
       </div>
 
       {/* 3. Main Chat Area */}
-      <div className={`${!selectedUser ? 'hidden md:flex' : 'flex'} flex-1 z-10`}>
-        <ChatBox selectedUser={selectedUser} onBack={() => setSelectedUser(null)} />
+      <div className={`${!selectedRoom ? 'hidden md:flex' : 'flex'} flex-1 z-10`}>
+        <ChatBox selectedRoom={selectedRoom} onBack={() => setSelectedRoom(null)} />
       </div>
     </div>
   );

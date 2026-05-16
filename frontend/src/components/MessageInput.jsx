@@ -2,18 +2,18 @@ import React, { useState, useRef, useEffect } from 'react';
 import { IoSend } from 'react-icons/io5';
 import { useSocket } from '../context/SocketContext';
 
-const MessageInput = ({ selectedUser }) => {
+const MessageInput = ({ selectedRoom, displayUser }) => {
   const [text, setText] = useState('');
   const { sendMessage, sendTyping, sendStopTyping } = useSocket();
   const typingTimeoutRef = useRef(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!text.trim() || !selectedUser) return;
+    if (!text.trim() || !selectedRoom) return;
 
-    sendMessage(selectedUser._id, text.trim());
+    sendMessage(selectedRoom._id, displayUser?._id, text.trim());
     setText('');
-    sendStopTyping(selectedUser._id);
+    sendStopTyping(selectedRoom._id);
     
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
@@ -23,10 +23,10 @@ const MessageInput = ({ selectedUser }) => {
   const handleTyping = (e) => {
     setText(e.target.value);
     
-    if (!selectedUser) return;
+    if (!selectedRoom) return;
 
     // Emit typing event
-    sendTyping(selectedUser._id);
+    sendTyping(selectedRoom._id);
 
     // Clear previous timeout
     if (typingTimeoutRef.current) {
@@ -35,7 +35,7 @@ const MessageInput = ({ selectedUser }) => {
 
     // Set new timeout to stop typing
     typingTimeoutRef.current = setTimeout(() => {
-      sendStopTyping(selectedUser._id);
+      sendStopTyping(selectedRoom._id);
     }, 2000);
   };
 
@@ -47,7 +47,7 @@ const MessageInput = ({ selectedUser }) => {
     };
   }, []);
 
-  if (!selectedUser) return null;
+  if (!selectedRoom) return null;
 
   return (
     <form onSubmit={handleSubmit} className="flex items-center gap-3">

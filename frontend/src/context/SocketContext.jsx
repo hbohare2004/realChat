@@ -21,17 +21,21 @@ export const SocketProvider = ({ children }) => {
     if (!socket) return;
 
     // Listen for online users updates
-    socket.on('getOnlineUsers', (users) => {
+    socket.on('online-users', (users) => {
       setOnlineUsers(users);
     });
 
     // Listen for incoming messages
-    socket.on('newMessage', (message) => {
-      setMessages((prev) => [...prev, message]);
+    socket.on('new-message', (message) => {
+      setMessages((prev) => {
+        // Prevent duplicate messages if any
+        if (prev.some(m => m._id === message._id)) return prev;
+        return [...prev, message];
+      });
     });
 
     // Listen for typing events
-    socket.on('userTyping', (data) => {
+    socket.on('user-typing', (data) => {
       setTypingUsers((prev) => {
         if (!prev.includes(data.userId)) {
           return [...prev, data.userId];
@@ -40,41 +44,36 @@ export const SocketProvider = ({ children }) => {
       });
     });
 
-    socket.on('userStoppedTyping', (data) => {
+    socket.on('user-stop-typing', (data) => {
       setTypingUsers((prev) => prev.filter(id => id !== data.userId));
     });
 
     return () => {
-      socket.off('getOnlineUsers');
-      socket.off('newMessage');
-      socket.off('userTyping');
-      socket.off('userStoppedTyping');
+      socket.off('online-users');
+      socket.off('new-message');
+      socket.off('user-typing');
+      socket.off('user-stop-typing');
     };
   }, [user]);
 
-  const sendMessage = (receiverId, text) => {
+  const sendMessage = (roomId, receiverId, text) => {
     const socket = socketService.getSocket();
     if (socket) {
-      socket.emit('sendMessage', { receiverId, text });
-      
-      // Optimistically add the message to our local state
-      // Normally the backend would echo it back or return it via HTTP
-      // Depending on your backend implementation, you might want to skip this
-      // and wait for the HTTP response or Socket echo.
+      socket.emit('send-message', { roomId, receiverId, message: text });
     }
   };
 
-  const sendTyping = (receiverId) => {
+  const sendTyping = (roomId) => {
     const socket = socketService.getSocket();
     if (socket) {
-      socket.emit('typing', { receiverId });
+      socket.emit('typing', { roomId });
     }
   };
 
-  const sendStopTyping = (receiverId) => {
+  const sendStopTyping = (roomId) => {
     const socket = socketService.getSocket();
     if (socket) {
-      socket.emit('stopTyping', { receiverId });
+      socket.emit('stop-typing', { roomId });
     }
   };
 
@@ -94,3 +93,4 @@ export const SocketProvider = ({ children }) => {
     </SocketContext.Provider>
   );
 };
+
