@@ -15,7 +15,7 @@ const Sidebar = ({ selectedUser, setSelectedUser }) => {
       try {
         const response = await api.get('/users'); // Assuming you have a route to get users
         // Filter out the current user
-        setUsers(response.data.filter(u => u._id !== currentUser._id));
+        setUsers(response.data.data.filter(u => u._id !== currentUser._id));
       } catch (error) {
         console.error('Error fetching users:', error);
       } finally {

@@ -43,10 +43,10 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await api.post('/auth/login', { email, password });
-      
-      // Handle different backend response structures safely
-      const token = response.data.token || response.data.jwt;
-      const userData = response.data.user || response.data.data || response.data;
+      // Extract data from standardized API response
+      const responseData = response.data.data;
+      const token = responseData?.token || response.data.token || response.data.jwt;
+      const userData = responseData?.user || responseData || response.data;
       
       if (token) {
         localStorage.setItem('token', token);
@@ -68,9 +68,10 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await api.post('/auth/register', { username, email, password });
       
-      // Handle different backend response structures safely
-      const token = response.data.token || response.data.jwt;
-      const userData = response.data.user || response.data.data || response.data;
+      // Extract data from standardized API response
+      const responseData = response.data.data;
+      const token = responseData?.token || response.data.token || response.data.jwt;
+      const userData = responseData?.user || responseData || response.data;
       
       if (token) {
         localStorage.setItem('token', token);

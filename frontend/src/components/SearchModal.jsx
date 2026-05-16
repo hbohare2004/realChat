@@ -1,8 +1,50 @@
-import React, { useState } from 'react';
-import { IoClose, IoSearch } from 'react-icons/io5';
+import React, { useState, useEffect } from 'react';
+import { IoClose, IoSearch, IoPersonAdd } from 'react-icons/io5';
+import api from '../services/api';
+import toast from 'react-hot-toast';
 
 const SearchModal = ({ isOpen, onClose }) => {
   const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const searchUsers = async () => {
+      if (query.trim().length < 2) {
+        setResults([]);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const response = await api.get(`/users/search?q=${query}`);
+        setResults(response.data.data.users || []);
+      } catch (error) {
+        console.error('Search error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(searchUsers, 500);
+    return () => clearTimeout(debounceTimer);
+  }, [query]);
+
+  const handleCreateChat = async (userId) => {
+    try {
+      const response = await api.post('/rooms', {
+        participants: [userId],
+        type: 'direct'
+      });
+      
+      toast.success('Chat started!');
+      onClose();
+      // Optionally redirect or refresh rooms here
+      window.location.reload(); 
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to start chat');
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -24,20 +66,60 @@ const SearchModal = ({ isOpen, onClose }) => {
             <IoSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <input 
               type="text"
-              placeholder="Search by username or name..."
+              placeholder="Search by username..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="w-full bg-light-900 dark:bg-dark-900 border border-gray-200 dark:border-dark-600 rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all dark:text-gray-100"
+              autoFocus
             />
           </div>
         </div>
 
         {/* Results */}
-        <div className="p-4 flex-1 overflow-y-auto max-h-80 custom-scrollbar text-center text-gray-500 dark:text-gray-400">
-          <p className="mt-8 mb-4">Start typing to search users...</p>
-          <div className="text-xs opacity-70 p-4 bg-primary-500/10 rounded-lg text-primary-600 dark:text-primary-400">
-            Note: Your friend needs to create the backend `/api/users/search` route for these results to actually load!
-          </div>
+        <div className="p-4 flex-1 overflow-y-auto max-h-80 custom-scrollbar">
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : results.length > 0 ? (
+            <div className="space-y-2">
+              {results.map((user) => (
+                <div 
+                  key={user._id}
+                  className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors border border-transparent hover:border-gray-100 dark:hover:border-dark-600"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-nexus-gradient flex items-center justify-center text-white font-bold">
+                      {user.avatar ? (
+                        <img src={user.avatar} alt={user.username} className="w-full h-full rounded-full object-cover" />
+                      ) : (
+                        user.username.charAt(0).toUpperCase()
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-800 dark:text-gray-100">{user.username}</h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Available to chat</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => handleCreateChat(user._id)}
+                    className="p-2 bg-primary-500/10 text-primary-600 hover:bg-primary-500 hover:text-white rounded-lg transition-all"
+                    title="Start Chat"
+                  >
+                    <IoPersonAdd size={20} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : query.trim().length >= 2 ? (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <p>No users found matching "{query}"</p>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <p>Start typing to search users...</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

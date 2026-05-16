@@ -5,12 +5,13 @@
  */
 
 import { Router } from "express";
-import { getAllUsers, getUserById } from "../controllers/userController.js";
+import { getAllUsers, getUserById, searchUsers } from "../controllers/userController.js";
 import auth from "../middleware/auth.js";
 
 const router = Router();
 
 router.get("/", auth, getAllUsers);
+router.get("/search", auth, searchUsers);
 router.get("/:id", auth, getUserById);
 
 export default router;

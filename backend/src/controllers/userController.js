@@ -20,3 +20,11 @@ export const getUserById = asyncHandler(async (req, res) => {
 
   res.status(200).json(new ApiResponse(200, { user }, "User retrieved successfully"));
 });
+
+// ─── Search Users ────────────────────────────────────────────────────────────
+export const searchUsers = asyncHandler(async (req, res) => {
+  const { q } = req.query;
+  const users = await UserService.searchUsers(q, req.user._id);
+
+  res.status(200).json(new ApiResponse(200, { users }, "Users found successfully"));
+});

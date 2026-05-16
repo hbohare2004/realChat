@@ -46,6 +46,29 @@ class UserService {
       lastSeen: new Date(),
     });
   }
+
+  /**
+   * Search users by username (excluding the requesting user).
+   * @param {string} query - Search string
+   * @param {string} currentUserId - The authenticated user's ID to exclude
+   * @returns {Array} List of matching user documents
+   */
+  static async searchUsers(query, currentUserId) {
+    if (!query || query.trim() === "") return [];
+
+    const users = await User.find({
+      $and: [
+        { _id: { $ne: currentUserId } },
+        {
+          username: { $regex: query, $options: "i" },
+        },
+      ],
+    })
+      .select("username avatar status")
+      .limit(10);
+
+    return users;
+  }
 }
 
 export default UserService;

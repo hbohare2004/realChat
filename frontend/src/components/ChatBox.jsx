@@ -30,7 +30,7 @@ const ChatBox = ({ selectedUser, onBack }) => {
       setLoading(true);
       try {
         const response = await api.get(`/messages/${selectedUser._id}`);
-        setMessages(response.data);
+        setMessages(response.data.data);
       } catch (error) {
         console.error('Error fetching messages:', error);
       } finally {
