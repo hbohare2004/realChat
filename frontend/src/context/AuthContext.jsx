@@ -43,12 +43,17 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await api.post('/auth/login', { email, password });
-      const { token, user } = response.data;
       
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+      // Handle different backend response structures safely
+      const token = response.data.token || response.data.jwt;
+      const userData = response.data.user || response.data.data || response.data;
       
-      setUser(user);
+      if (token) {
+        localStorage.setItem('token', token);
+      }
+      localStorage.setItem('user', JSON.stringify(userData));
+      
+      setUser(userData);
       socketService.connect();
       
       toast.success('Login successful!');
@@ -62,12 +67,17 @@ export const AuthProvider = ({ children }) => {
   const register = async (username, email, password) => {
     try {
       const response = await api.post('/auth/register', { username, email, password });
-      const { token, user } = response.data;
       
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+      // Handle different backend response structures safely
+      const token = response.data.token || response.data.jwt;
+      const userData = response.data.user || response.data.data || response.data;
       
-      setUser(user);
+      if (token) {
+        localStorage.setItem('token', token);
+      }
+      localStorage.setItem('user', JSON.stringify(userData));
+      
+      setUser(userData);
       socketService.connect();
       
       toast.success('Registration successful!');
