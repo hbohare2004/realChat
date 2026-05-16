@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { IoChatbubbles, IoPeople, IoCall, IoBookmark, IoSettingsOutline, IoHeart, IoAdd, IoSunny, IoMoon } from 'react-icons/io5';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import api from '../services/api';
 import SearchModal from './SearchModal';
 import ActivityModal from './ActivityModal';
 import ProfileModal from './ProfileModal';
@@ -13,6 +14,23 @@ const LeftNav = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isActivityOpen, setIsActivityOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [requestCount, setRequestCount] = useState(0);
+
+  useEffect(() => {
+    const fetchRequestCount = async () => {
+      try {
+        const response = await api.get('/requests/pending');
+        setRequestCount(response.data.data.requests?.length || 0);
+      } catch (error) {
+        console.error('Failed to fetch request count:', error);
+      }
+    };
+
+    fetchRequestCount();
+    // Refresh every minute
+    const interval = setInterval(fetchRequestCount, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <>
@@ -50,7 +68,7 @@ const LeftNav = () => {
               icon={<IoHeart size={22} />} 
               label="Buzz" 
               onClick={() => setIsActivityOpen(true)}
-              badge={3} 
+              badge={requestCount > 0 ? requestCount : null} 
             />
           </div>
           

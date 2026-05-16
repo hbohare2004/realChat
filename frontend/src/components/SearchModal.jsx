@@ -30,19 +30,16 @@ const SearchModal = ({ isOpen, onClose }) => {
     return () => clearTimeout(debounceTimer);
   }, [query]);
 
-  const handleCreateChat = async (userId) => {
+  const handleSendRequest = async (userId) => {
     try {
-      const response = await api.post('/rooms', {
-        participants: [userId],
-        type: 'direct'
+      await api.post('/requests', {
+        recipientId: userId
       });
       
-      toast.success('Chat started!');
+      toast.success('Request sent!');
       onClose();
-      // Optionally redirect or refresh rooms here
-      window.location.reload(); 
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to start chat');
+      toast.error(error.response?.data?.message || 'Failed to send request');
     }
   };
 
@@ -102,9 +99,9 @@ const SearchModal = ({ isOpen, onClose }) => {
                     </div>
                   </div>
                   <button 
-                    onClick={() => handleCreateChat(user._id)}
+                    onClick={() => handleSendRequest(user._id)}
                     className="p-2 bg-primary-500/10 text-primary-600 hover:bg-primary-500 hover:text-white rounded-lg transition-all"
-                    title="Start Chat"
+                    title="Send Friend Request"
                   >
                     <IoPersonAdd size={20} />
                   </button>
